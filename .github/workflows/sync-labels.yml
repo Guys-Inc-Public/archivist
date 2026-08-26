@@ -17,6 +17,7 @@ jobs:
     name: Apply label set
     runs-on: ubuntu-latest
     permissions:
+      contents: read   # a job-level permissions block zeroes every scope it omits
       issues: write
     steps:
       - uses: actions/checkout@v4

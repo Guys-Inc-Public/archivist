@@ -39,7 +39,7 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - uses: anchore/sbom-action/download-syft@v0
+      - uses: anchore/sbom-action/download-syft@v0.24.0
 
       - name: Import release signing subkey
         env:
@@ -68,7 +68,7 @@ jobs:
 
       - name: Attest build provenance
         if: ${{ !inputs.dry-run }}
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: 'dist/*.tar.gz'
 

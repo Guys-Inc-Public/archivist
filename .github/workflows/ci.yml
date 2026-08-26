@@ -54,9 +54,11 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
-      - uses: golangci/golangci-lint-action@v6
+      # v9 is the first major that installs golangci-lint v2, which is the
+      # schema .golangci.yml is written against.
+      - uses: golangci/golangci-lint-action@v9
         with:
-          version: latest
+          version: v2.13.1
 
   cross-compile:
     name: Cross-compile ${{ matrix.goos }}/${{ matrix.goarch }}
