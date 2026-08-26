@@ -39,6 +39,12 @@ outputs:
 # This wrapper deliberately contains no logic. Everything it does is a call into
 # the CLI, so that every behaviour is reachable - and testable - without pushing
 # a commit. See CONTRIBUTING.md.
+#
+# Every input reaches the shell through `env:`, never through `${{ }}`
+# interpolation inside `run:`. A templated input is substituted into the script
+# before bash ever sees it, so a value containing shell metacharacters executes
+# on the runner of whoever uses this action. Passing through the environment
+# means bash treats the value as data.
 runs:
   using: composite
   steps:
@@ -46,21 +52,37 @@ runs:
       shell: bash
       env:
         ARCHIVIST_VERSION: ${{ inputs.version }}
-      run: ${{ github.action_path }}/install.sh
+        ACTION_PATH: ${{ github.action_path }}
+      run: bash "${ACTION_PATH}/install.sh"
 
     - name: Build repository
       shell: bash
+      env:
+        PACKAGES: ${{ inputs.packages }}
+        CONFIG: ${{ inputs.config }}
       run: |
-        archivist build "${{ inputs.packages }}" \
-          --config "${{ inputs.config }}" \
+        set -euo pipefail
+        archivist build "$PACKAGES" \
+          --config "$CONFIG" \
           --out "${RUNNER_TEMP}/archivist-repo"
 
     - name: Publish repository
       id: publish
       shell: bash
+      env:
+        BUCKET: ${{ inputs.bucket }}
+        ENDPOINT: ${{ inputs.endpoint }}
+        DRY_RUN: ${{ inputs.dry-run }}
       run: |
-        archivist publish "${RUNNER_TEMP}/archivist-repo" \
-          --bucket "${{ inputs.bucket }}" \
-          ${{ inputs.endpoint && format('--endpoint "{0}"', inputs.endpoint) || '' }} \
-          ${{ inputs.dry-run == 'true' && '--dry-run' || '' }} \
-          --github-output
+        set -euo pipefail
+
+        # Built as an array rather than a string, so no value is ever re-split.
+        args=( "${RUNNER_TEMP}/archivist-repo" --bucket "$BUCKET" )
+        if [ -n "$ENDPOINT" ]; then
+          args+=( --endpoint "$ENDPOINT" )
+        fi
+        if [ "$DRY_RUN" = "true" ]; then
+          args+=( --dry-run )
+        fi
+
+        archivist publish "${args[@]}" --github-output
