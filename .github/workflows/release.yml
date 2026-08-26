@@ -29,12 +29,12 @@ jobs:
       id-token: write       # mint the short-lived Sigstore identity
       attestations: write   # record the provenance attestation
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0    # goreleaser needs full history for the changelog
           persist-credentials: false
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
           cache: true
@@ -58,7 +58,7 @@ jobs:
           fi
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@v7
         with:
           version: '~> v2'
           args: ${{ inputs.dry-run && 'release --clean --snapshot --skip=publish,sign' || 'release --clean' }}
@@ -68,7 +68,7 @@ jobs:
 
       - name: Attest build provenance
         if: ${{ !inputs.dry-run }}
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: 'dist/*.tar.gz'
 
