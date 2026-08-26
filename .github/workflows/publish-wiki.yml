@@ -31,14 +31,36 @@ jobs:
           path: repo
           persist-credentials: false
 
+      # A repository's wiki git remote does not exist until its first page has
+      # been created, and there is no API to create one. Checking out with
+      # actions/checkout would fail here with "Repository not found", which
+      # sends the reader looking for a permissions problem that isn't there.
       - name: Checkout wiki
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ github.repository }}.wiki
-          path: wiki
-          token: ${{ secrets.GITHUB_TOKEN }}
+        id: wiki
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          remote="https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git"
+          if git clone --quiet "$remote" wiki 2>/dev/null; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "ready=false" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Wiki not initialised"
+            echo
+            echo "This repository's wiki has never been opened, so its git remote does not"
+            echo "exist yet and there is no API to create one."
+            echo
+            echo "**One-time fix:** open"
+            echo "<https://github.com/${GITHUB_REPOSITORY}/wiki> and save any page."
+            echo "Re-run this workflow afterwards and it will take over from there."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::warning::Wiki not initialised - see the job summary. Skipping."
 
       - name: Render docs into wiki pages
+        if: steps.wiki.outputs.ready == 'true'
         run: |
           set -euo pipefail
           # Clear the mirror, preserving git metadata, so deletions propagate.
@@ -60,6 +82,7 @@ jobs:
           } >> wiki/Home.md
 
       - name: Commit and push
+        if: steps.wiki.outputs.ready == 'true'
         working-directory: wiki
         run: |
           set -euo pipefail
