@@ -119,8 +119,14 @@ func (c *Control) Fields() []string {
 	return out
 }
 
-func (c *Control) Package() string      { return c.Get("Package") }
-func (c *Control) Version() string      { return c.Get("Version") }
+// Package returns the binary package name.
+func (c *Control) Package() string { return c.Get("Package") }
+
+// Version returns the package version, epoch included if one is present.
+func (c *Control) Version() string { return c.Get("Version") }
+
+// Architecture returns the package architecture in Debian's vocabulary
+// (amd64, arm64, armhf, all), as recorded in the control stanza.
 func (c *Control) Architecture() string { return c.Get("Architecture") }
 
 // Source returns the source package name, which defaults to the binary package

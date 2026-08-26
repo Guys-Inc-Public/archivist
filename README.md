@@ -8,7 +8,6 @@
 [![CI](https://github.com/Guys-Inc-Public/archivist/actions/workflows/ci.yml/badge.svg)](https://github.com/Guys-Inc-Public/archivist/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/Guys-Inc-Public/archivist/actions/workflows/codeql.yml/badge.svg)](https://github.com/Guys-Inc-Public/archivist/actions/workflows/codeql.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-2f80c4.svg)](./LICENSE)
-[![Go Reference](https://pkg.go.dev/badge/github.com/Guys-Inc-Public/archivist.svg)](https://pkg.go.dev/github.com/Guys-Inc-Public/archivist)
 
 </div>
 

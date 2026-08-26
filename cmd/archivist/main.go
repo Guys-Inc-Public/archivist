@@ -92,9 +92,8 @@ func inspect(args []string) error {
 	fs := flag.NewFlagSet("inspect", flag.ContinueOnError)
 	component := fs.String("component", "main", "archive component, for the computed pool path")
 	fs.Usage = func() {
-		fmt.Fprintln(fs.Output(), "Usage: archivist inspect [flags] <control-file>")
-		fmt.Fprintln(fs.Output(), "\nReads a Debian control file, or standard input when the path is \"-\".")
-		fmt.Fprintln(fs.Output())
+		_, _ = fmt.Fprint(fs.Output(), "Usage: archivist inspect [flags] <control-file>\n\n"+
+			"Reads a Debian control file, or standard input when the path is \"-\".\n\n")
 		fs.PrintDefaults()
 	}
 	if err := fs.Parse(args); err != nil {
@@ -107,11 +106,12 @@ func inspect(args []string) error {
 
 	in := os.Stdin
 	if path := fs.Arg(0); path != "-" {
+		// #nosec G304 -- reading a caller-supplied path is this command's entire job.
 		f, err := os.Open(path)
 		if err != nil {
 			return err
 		}
-		defer f.Close()
+		defer func() { _ = f.Close() }()
 		in = f
 	}
 

@@ -1,17 +1,13 @@
 # Every change requires review from a maintainer.
-#
-# NOTE: this should become a @Guys-Inc-Public/maintainers team reference once
-# that team exists. A team scales to more than one reviewer and survives an
-# account rename; an individual owner does neither.
-*                       @Cam8863
+*                       @Guys-Inc-Public/maintainers
 
 # Security-sensitive surfaces - signing, publishing, and the workflows that hold
 # secrets. Changes here are reviewed with the threat model in mind.
-/internal/sign/         @Cam8863
-/internal/publish/      @Cam8863
-/.github/workflows/     @Cam8863
-/action/                @Cam8863
-/SECURITY.md            @Cam8863
+/internal/sign/         @Guys-Inc-Public/maintainers
+/internal/publish/      @Guys-Inc-Public/maintainers
+/.github/workflows/     @Guys-Inc-Public/maintainers
+/action/                @Guys-Inc-Public/maintainers
+/SECURITY.md            @Guys-Inc-Public/maintainers
 
 # Decisions are deliberately hard to change.
-/docs/decisions/        @Cam8863
+/docs/decisions/        @Guys-Inc-Public/maintainers

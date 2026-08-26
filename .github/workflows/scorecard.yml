@@ -26,11 +26,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: ossf/scorecard-action@v2
+      - uses: ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc # v2.4.4
         with:
           results_file: results.sarif
           results_format: sarif
-          publish_results: true
+          # Publishing to the public Scorecard dataset requires a public
+          # repository. Becomes true on its own at M4.
+          publish_results: ${{ github.event.repository.visibility == 'public' }}
 
       - uses: github/codeql-action/upload-sarif@v3
         with:

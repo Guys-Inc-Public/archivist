@@ -17,12 +17,13 @@ jobs:
     name: Apply label set
     runs-on: ubuntu-latest
     permissions:
+      contents: read   # a job-level permissions block zeroes every scope it omits
       issues: write
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - uses: EndBug/label-sync@v2
+      - uses: EndBug/label-sync@52074158190acb45f3077f9099fea818aa43f97a # v2
         with:
           config-file: .github/labels.yml
           delete-other-labels: true
