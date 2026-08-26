@@ -1,0 +1,42 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - bodyclose
+    - errorlint
+    - gosec        # this tool handles key material; unchecked crypto is not acceptable
+    - misspell
+    - revive
+    - unconvert
+    - wastedassign
+
+  settings:
+    revive:
+      rules:
+        - name: exported
+          arguments: [checkPrivateReceivers]
+    gosec:
+      excludes:
+        - G104   # duplicated by errcheck
+
+  exclusions:
+    rules:
+      # Test files may take shortcuts that production code may not.
+      - path: _test\.go
+        linters: [gosec, errcheck]
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes: [github.com/Guys-Inc-Public/archivist]

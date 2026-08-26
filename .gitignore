@@ -1,0 +1,26 @@
+# Build output
+/dist/
+/repo/
+/archivist
+/bin/
+
+# Go
+*.test
+*.out
+coverage.*
+
+# Local config that may carry real bucket names or endpoints
+archivist.local.yml
+.env
+
+# Never commit key material
+*.gpg
+*.pgp
+*.key
+!docs/**/*.asc
+.gnupg/
+
+# Editors
+.DS_Store
+.idea/
+.vscode/

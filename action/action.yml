@@ -1,0 +1,66 @@
+name: 'Archivist'
+description: 'Build a signed apt repository from a directory of .deb files and publish it to S3-compatible storage.'
+author: 'Guys Inc'
+branding:
+  icon: 'package'
+  color: 'blue'
+
+inputs:
+  packages:
+    description: 'Directory containing the .deb files to publish.'
+    required: true
+  config:
+    description: 'Path to the archivist configuration file.'
+    required: false
+    default: 'archivist.yml'
+  bucket:
+    description: 'Destination bucket name.'
+    required: true
+  endpoint:
+    description: 'S3-compatible endpoint URL. Defaults to Amazon S3 when unset.'
+    required: false
+  version:
+    description: 'Version of archivist to use. Pin this in production.'
+    required: false
+    default: 'latest'
+  dry-run:
+    description: 'Build and verify the repository, but upload nothing.'
+    required: false
+    default: 'false'
+
+outputs:
+  repository-url:
+    description: 'Public URL of the published repository.'
+    value: ${{ steps.publish.outputs.repository-url }}
+  install-snippet:
+    description: 'Ready-to-paste apt install instructions, with the key fingerprint filled in.'
+    value: ${{ steps.publish.outputs.install-snippet }}
+
+# This wrapper deliberately contains no logic. Everything it does is a call into
+# the CLI, so that every behaviour is reachable - and testable - without pushing
+# a commit. See CONTRIBUTING.md.
+runs:
+  using: composite
+  steps:
+    - name: Install archivist
+      shell: bash
+      env:
+        ARCHIVIST_VERSION: ${{ inputs.version }}
+      run: ${{ github.action_path }}/install.sh
+
+    - name: Build repository
+      shell: bash
+      run: |
+        archivist build "${{ inputs.packages }}" \
+          --config "${{ inputs.config }}" \
+          --out "${RUNNER_TEMP}/archivist-repo"
+
+    - name: Publish repository
+      id: publish
+      shell: bash
+      run: |
+        archivist publish "${RUNNER_TEMP}/archivist-repo" \
+          --bucket "${{ inputs.bucket }}" \
+          ${{ inputs.endpoint && format('--endpoint "{0}"', inputs.endpoint) || '' }} \
+          ${{ inputs.dry-run == 'true' && '--dry-run' || '' }} \
+          --github-output

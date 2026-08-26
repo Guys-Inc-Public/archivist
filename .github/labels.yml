@@ -1,0 +1,64 @@
+# The Guys Inc standard label set. Four axes, each with its own colour family,
+# so a label's purpose is readable at a glance in a long issue list.
+
+# --- Type: what kind of work is this? ------------------------------------- blue
+- name: bug
+  color: "2f80c4"
+  description: Something is broken and reproducible
+- name: enhancement
+  color: "2f80c4"
+  description: A new capability or an improvement to an existing one
+- name: documentation
+  color: "2f80c4"
+  description: Docs only - no behaviour change
+- name: refactor
+  color: "2f80c4"
+  description: Internal change with no user-visible effect
+- name: test
+  color: "2f80c4"
+  description: Test coverage or test infrastructure
+
+# --- Status: what is blocking this? -------------------------------------- amber
+- name: "needs: triage"
+  color: "b05f2c"
+  description: Not yet assessed by a maintainer
+- name: "needs: reproduction"
+  color: "b05f2c"
+  description: Cannot act until the report can be reproduced
+- name: "needs: decision"
+  color: "b05f2c"
+  description: Blocked on a maintainer call, not on work
+- name: blocked
+  color: "b05f2c"
+  description: Blocked on something outside this repository
+
+# --- Priority: only two, because more is theatre --------------------------- red
+- name: "priority: critical"
+  color: "9c2c2c"
+  description: Data loss, a broken published repository, or a security issue
+- name: security
+  color: "9c2c2c"
+  description: Security-relevant - handle per SECURITY.md
+
+# --- Meta -------------------------------------------------------------- neutral
+- name: dependencies
+  color: "5a6875"
+  description: Dependency updates
+- name: go
+  color: "5a6875"
+  description: Go code and modules
+- name: github-actions
+  color: "5a6875"
+  description: Workflows and Actions
+- name: breaking-change
+  color: "5d9c31"
+  description: Requires a major version bump
+- name: good first issue
+  color: "5d9c31"
+  description: A well-scoped starting point for a new contributor
+- name: help wanted
+  color: "5d9c31"
+  description: Maintainers would welcome outside help here
+- name: ignore-for-release
+  color: "5a6875"
+  description: Omit from generated release notes

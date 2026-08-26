@@ -1,0 +1,88 @@
+name: Release
+
+# A packaging tool that ships unsigned binaries is a bad joke. Every release is
+# signed, carries an SBOM, and records a public build-provenance attestation.
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Build and sign, but publish nothing'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build, sign, publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write       # create the GitHub release
+      id-token: write       # mint the short-lived Sigstore identity
+      attestations: write   # record the provenance attestation
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0    # goreleaser needs full history for the changelog
+          persist-credentials: false
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - uses: anchore/sbom-action/download-syft@v0
+
+      - name: Import release signing subkey
+        env:
+          RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          export GNUPGHOME="${RUNNER_TEMP}/gnupg"
+          mkdir -p "$GNUPGHOME" && chmod 700 "$GNUPGHOME"
+          printf '%s' "$RELEASE_GPG_PRIVATE_KEY" | gpg --batch --import
+          echo "GNUPGHOME=${GNUPGHOME}" >> "$GITHUB_ENV"
+          # Fail loudly if the secret holds a primary key. Only a signing subkey
+          # belongs in CI - see docs/Signing-Keys.md.
+          if gpg --batch --list-secret-keys --with-colons | awk -F: '$1=="sec" && $12 ~ /c/ {found=1} END{exit !found}'; then
+            echo "::error::The imported secret key can certify. CI must hold a signing subkey only."
+            exit 1
+          fi
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: '~> v2'
+          args: ${{ inputs.dry-run && 'release --clean --snapshot --skip=publish,sign' || 'release --clean' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_FINGERPRINT: ${{ vars.RELEASE_GPG_FINGERPRINT }}
+
+      - name: Attest build provenance
+        if: ${{ !inputs.dry-run }}
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: 'dist/*.tar.gz'
+
+      - name: Publish job summary
+        run: |
+          {
+            echo "### Release artifacts"
+            echo
+            echo '```'
+            ls -la dist/ | sed -n '2,100p'
+            echo '```'
+            echo
+            echo "Verify provenance with:"
+            echo '```console'
+            echo "gh attestation verify <file> --repo ${GITHUB_REPOSITORY}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

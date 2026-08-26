@@ -1,0 +1,73 @@
+version: 2
+
+project_name: archivist
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: archivist
+    main: ./cmd/archivist
+    binary: archivist
+    env: [CGO_ENABLED=0]
+    flags: [-trimpath]
+    ldflags:
+      - -s -w
+      - -X main.version={{ .Version }}
+      - -X main.commit={{ .Commit }}
+      - -X main.date={{ .CommitDate }}
+    # A CI tool must run wherever CI runs.
+    goos: [linux, darwin]
+    goarch: [amd64, arm64, arm]
+    goarm: ["7"]
+    ignore:
+      - { goos: darwin, goarch: arm }
+    # Reproducibility: the binary must depend on the tag, not on when it built.
+    mod_timestamp: '{{ .CommitTimestamp }}'
+
+archives:
+  - formats: [tar.gz]
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    files: [README.md, LICENSE, CHANGELOG.md]
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+# The checksum file is signed, which transitively signs every archive it names.
+signs:
+  - artifacts: checksum
+    id: gpg
+    signature: '${artifact}.asc'
+    cmd: gpg
+    args:
+      - --batch
+      - --local-user={{ .Env.GPG_FINGERPRINT }}
+      - --output=${signature}
+      - --detach-sign
+      - --armor
+      - ${artifact}
+
+sboms:
+  - artifacts: archive
+
+changelog:
+  use: github-native
+
+release:
+  draft: false
+  prerelease: auto
+  footer: |
+    ## Verifying this release
+
+    ```console
+    # Provenance: built by this repository's workflow, from this commit.
+    gh attestation verify archivist_*.tar.gz --repo {{ .Env.GITHUB_REPOSITORY }}
+
+    # Signature: checksums.txt is signed by the Guys Inc release subkey.
+    gpg --verify checksums.txt.asc checksums.txt
+    sha256sum --check --ignore-missing checksums.txt
+    ```
+
+    Key fingerprints and rotation policy: [Signing Keys](https://github.com/Guys-Inc-Public/archivist/wiki/Signing-Keys).
