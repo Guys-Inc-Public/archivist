@@ -39,7 +39,7 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - uses: anchore/sbom-action/download-syft@v0.24.0
+      - uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
 
       - name: Import release signing subkey
         env:
@@ -58,7 +58,7 @@ jobs:
           fi
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6
         with:
           version: '~> v2'
           args: ${{ inputs.dry-run && 'release --clean --snapshot --skip=publish,sign' || 'release --clean' }}

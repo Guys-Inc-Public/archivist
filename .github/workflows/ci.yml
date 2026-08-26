@@ -10,6 +10,12 @@ on:
 permissions:
   contents: read
 
+# Third-party actions are pinned to a commit SHA with the version in a trailing
+# comment: a tag can be moved by whoever owns it, and a moved tag is arbitrary
+# code execution with our token. Dependabot updates the SHA and the comment
+# together. Actions under actions/ and github/ stay on major tags - GitHub owns
+# both the org and the runner, so a SHA buys nothing there.
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -56,7 +62,7 @@ jobs:
           cache: true
       # v9 is the first major that installs golangci-lint v2, which is the
       # schema .golangci.yml is written against.
-      - uses: golangci/golangci-lint-action@v9
+      - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9
         with:
           version: v2.13.1
 
@@ -101,7 +107,7 @@ jobs:
           python3 .github/wiki/render.py docs "${RUNNER_TEMP}/wiki" "$GITHUB_REPOSITORY"
 
       - name: Check external links
-        uses: lycheeverse/lychee-action@v2
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2
         with:
           args: --no-progress --exclude-path .github/wiki './**/*.md'
           fail: true
