@@ -1,9 +1,10 @@
 # Getting Started
 
 > [!WARNING]
-> **Pre-release.** `build`, `publish` and `verify` are not implemented yet. This
-> page documents the intended interface so it can be reviewed before it is
-> built. `archivist version` and `archivist inspect` work today.
+> **Pre-release.** Everything up to and including *Try it before publishing*
+> works today. **Publish** and everything after it documents the intended
+> interface so that it can be reviewed before it is built — `archivist publish`
+> exits `2`. Nothing is stable until `v0.1.0` is tagged.
 
 ## Install
 
@@ -80,6 +81,9 @@ If that works, the published version will too. This is the entire point of
 having a CLI rather than only an Action.
 
 ## Publish
+
+> [!NOTE]
+> Not implemented yet. `archivist publish` exits `2`. This is milestone M2.
 
 ```console
 $ archivist publish ./repo --bucket example-apt --endpoint https://s3.example.com

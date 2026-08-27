@@ -23,7 +23,7 @@ If `v0.1` cannot be explained in a two-sentence README, it is too big.
 | | Milestone | Done when |
 |---|---|---|
 | **M0** | Scaffolding | Repository, governance, CI/CD, and decisions recorded. **Complete.** |
-| **M1** | Local round trip | The CLI turns a directory of `.deb` files into a valid signed repository tree on local disk, verified by pointing a real `apt` at it over `file://`. No cloud involved. |
+| **M1** | Local round trip | The CLI turns a directory of `.deb` files into a valid signed repository tree on local disk, verified by pointing a real `apt` at it over `file://`. No cloud involved. **Complete.** |
 | **M2** | Publish | The same tree uploads to S3-compatible storage, verified by installing from a live URL in a clean container. |
 | **M3** | Dogfood | `github-desktop-linux` uses `archivist` for its actual releases. **This is the milestone that matters** — until it happens, this is a toy. |
 | **M4** | Action and docs | Composite Action published, copy-pasteable workflow in the README, signing-key documentation finished, repository public. |
@@ -31,11 +31,22 @@ If `v0.1` cannot be explained in a two-sentence README, it is too big.
 
 ## Current state
 
-M0 is complete. What exists today:
+M0 and M1 are complete. What exists today:
 
+- **`archivist build` works.** Point it at a directory of packages and it writes
+  a signed repository tree you can install from over `file://`.
 - `archivist version` and `archivist inspect` work.
-- `internal/deb` parses control stanzas and computes pool paths, under test.
-- `build`, `publish` and `verify` parse their arguments and exit `2`.
+- `publish` and `verify` parse their arguments and exit `2`.
+
+M1 is called complete on the strength of a check that mocks nothing. On every
+pull request, CI builds packages with `dpkg-deb`, generates a signing key with
+`gpg`, has `archivist` build and sign a repository, and installs from it with a
+real `apt` on Debian stable — then breaks the index checksum and the signature
+in turn and confirms `apt` refuses both. It is
+[`script/round-trip.sh`](https://github.com/Guys-Inc-Public/archivist/blob/main/script/round-trip.sh),
+and `make round-trip` runs the same thing locally.
+
+Next is M2, which is the same tree in a bucket.
 
 ## Open questions
 

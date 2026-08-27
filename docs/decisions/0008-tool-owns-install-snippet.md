@@ -1,6 +1,6 @@
 # 0008 — `archivist` generates the install snippet
 
-**Status:** Accepted · **Date:** 2026-08-26
+**Status:** Accepted, amended by [0014](0014-no-generated-landing-page.md) · **Date:** 2026-08-26
 
 ## Context
 
@@ -23,8 +23,13 @@ The counter-argument is that presentation is not a packaging tool's job.
 as part of publish output.**
 
 It emits the snippet, not a web page. Where that text is displayed remains the
-user's concern; `archivist` publishes a minimal `index.html` containing it so
-that a bare bucket is not a dead end, and that page is replaceable.
+user's concern.
+
+> [!NOTE]
+> This record originally also had `archivist` publish a minimal `index.html`
+> containing the snippet. It no longer does; see
+> [0014](0014-no-generated-landing-page.md) for why. The decision to emit the
+> snippet as text is unaffected.
 
 ## Consequences
 

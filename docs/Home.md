@@ -4,9 +4,9 @@
 Publish that repository to any S3-compatible bucket, on your own domain.**
 
 > [!WARNING]
-> **Pre-release.** These pages describe the design target. Commands marked
-> *planned* do not work yet. See [Roadmap](Roadmap.md) for what is actually
-> built.
+> **Pre-release.** `build`, `inspect` and `version` work. `publish` and `verify`
+> describe the design target and exit `2`. See [Roadmap](Roadmap.md) for what is
+> actually built. Nothing is stable until `v0.1.0` is tagged.
 
 ## Start here
 

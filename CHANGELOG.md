@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Decision 0014: `archivist` never generates `index.html`. The published tree is
+  `dists/`, `pool/` and the public key, and nothing else. This amends decision
+  0008, which had the tool publish a minimal landing page; where a bare bucket
+  URL should lead is a hosting question, not a packaging one.
 - `archivist build` works: it reads every package under a directory, writes a
   signed repository tree, and prints the one command needed to install from it
   over `file://`. Packages are recognised by content, so a release directory
@@ -53,5 +57,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   distribution shape, and documentation.
 - Extraction inventory recording what was and was not carried over from
   `github-desktop-linux`.
+
+### Changed
+
+- Documentation no longer warns that `build` is unimplemented, and the README
+  shows the output the command actually produces rather than a sketch of it.
+  `publish` and `verify` are still marked as the design target.
+- `docs/Repository-Layout.md` is drawn relative to the repository root rather
+  than a bucket root, records the metadata sidecars, and no longer shows an
+  `index.html` that will never be written.
 
 [Unreleased]: https://github.com/Guys-Inc-Public/archivist/commits/main
