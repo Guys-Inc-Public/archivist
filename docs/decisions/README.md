@@ -28,3 +28,4 @@ rather than edited, so the history of the design stays legible.
 | [0010](0010-object-storage-sdk.md) | Use `aws-sdk-go-v2` for object storage | Accepted |
 | [0011](0011-valid-until-is-opt-in.md) | `Valid-Until` is opt-in and unset by default | Accepted |
 | [0012](0012-metadata-sidecar-format.md) | The metadata sidecar format | Accepted |
+| [0013](0013-deb-decompression-support.md) | Decompress control archives in-process: gzip, xz and zstd | Accepted |
