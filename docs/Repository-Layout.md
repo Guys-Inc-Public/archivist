@@ -6,7 +6,7 @@ the Debian archive format; none of it is invented.
 ```
 /
 ├── dists/
-│   └── stable/                          <- suite
+│   └── stable/                          <- codename
 │       ├── Release                      signed manifest of everything below
 │       ├── Release.gpg                  detached signature over Release
 │       ├── InRelease                    Release with an inline signature
@@ -82,6 +82,13 @@ would be invisible to every client. The pool object is stored once; only the
 index entry is repeated.
 
 ## Suites
+
+The directory under `dists/` is the **codename**, which is Debian's own
+convention — `dists/bookworm/`, not `dists/stable/`. `Release` carries both
+`Suite:` and `Codename:`, so a client is free to call the archive either name,
+but the path it fetches is the codename. For most projects the two are equal and
+the distinction never comes up; where they differ, the install snippet
+`archivist` generates uses the codename, because that is the one that resolves.
 
 `v0.1` publishes a single suite. `suite` is a required configuration field
 regardless, so that adding `testing` alongside `stable` later is a configuration
