@@ -9,7 +9,7 @@ LDFLAGS := -s -w \
 	-X main.date=$(DATE)
 
 .DEFAULT_GOAL := help
-.PHONY: help build test cover lint fmt tidy clean
+.PHONY: help build test cover lint fmt tidy round-trip clean
 
 help: ## Show this help
 	@awk 'BEGIN{FS=":.*##"} /^[a-z-]+:.*##/{printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -32,6 +32,9 @@ fmt: ## Format all Go source
 
 tidy: ## Tidy go.mod / go.sum
 	go mod tidy
+
+round-trip: build ## Build a repository and install from it with a real apt (needs root; run in a container)
+	./script/round-trip.sh
 
 clean: ## Remove build output
 	rm -rf bin/ dist/ repo/ coverage.out

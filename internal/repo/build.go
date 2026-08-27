@@ -45,6 +45,9 @@ type Result struct {
 	SuiteDir    string   // dists/<codename>, relative to Out
 	Indices     []string // index files written, relative to Out
 	ReleasePath string   // the file a signature must cover, relative to Out
+
+	// Fingerprint of the key that signed the tree, set by Sign.
+	Fingerprint string
 }
 
 // A repository tree is world-readable by definition: every file in it is

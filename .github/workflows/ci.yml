@@ -89,6 +89,50 @@ jobs:
       # not a CI tool. This job is the contract, not a nicety.
       - run: GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} CGO_ENABLED=0 go build ./...
 
+  round-trip:
+    name: Round trip (apt installs from a built repository)
+    runs-on: ubuntu-latest
+    # bookworm, so the check runs against GnuPG 2.2.40 and the apt that most
+    # users actually have, rather than whatever ubuntu-latest ships this month.
+    # Everything the job needs is generated inside it, secrets included, so it
+    # runs unchanged on a pull request from a fork.
+    container: debian:stable-slim
+    steps:
+      - name: Install the tools the round trip needs
+        run: |
+          set -euo pipefail
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            ca-certificates git gnupg dpkg-dev
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # actions/checkout writes the workspace as the runner user, but this job
+      # runs as root inside the container. git then refuses to read the
+      # repository at all - "detected dubious ownership", exit 128 - and
+      # `go build` fails while stamping VCS information rather than while
+      # compiling, so the error names neither git nor the container.
+      - name: Trust the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build the CLI
+        run: go build -o ./bin/archivist ./cmd/archivist
+
+      # This is milestone M1's acceptance test. It builds packages with
+      # dpkg-deb, generates a key with gpg, has archivist build and sign a
+      # repository, and then installs from it with a real apt - checking that a
+      # tampered index and a tampered signature are both refused. Nothing in it
+      # is mocked; if it passes, the repository is real.
+      - name: Install from a repository archivist built
+        run: ./script/round-trip.sh
+
   docs:
     name: Docs
     runs-on: ubuntu-latest

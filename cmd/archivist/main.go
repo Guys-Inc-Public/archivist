@@ -66,7 +66,9 @@ func run(args []string) error {
 		return printVersion()
 	case "inspect":
 		return inspect(args[1:])
-	case "build", "publish", "verify":
+	case "build":
+		return build(args[1:])
+	case "publish", "verify":
 		return fmt.Errorf("%q: %w - see the roadmap for milestone status", cmd, errNotImplemented)
 	default:
 		fmt.Fprint(os.Stderr, usage)
@@ -170,3 +172,25 @@ func readForInspection(name string, r io.Reader) (*deb.Control, *deb.Package, er
 
 // debMagic is the ar archive header every .deb file begins with.
 const debMagic = "!<arch>\n"
+
+// parseFlags parses args, allowing flags and positional arguments to be
+// interleaved.
+//
+// The standard flag package stops at the first non-flag word, so
+// "build ./dist --out ./repo" would treat --out as another operand. That is the
+// order the documentation uses and the order people type, and being right about
+// argument order is not a thing a user should have to be.
+func parseFlags(fs *flag.FlagSet, args []string) ([]string, error) {
+	var operands []string
+	rest := args
+	for {
+		if err := fs.Parse(rest); err != nil {
+			return nil, err
+		}
+		if fs.NArg() == 0 {
+			return operands, nil
+		}
+		operands = append(operands, fs.Arg(0))
+		rest = fs.Args()[1:]
+	}
+}
