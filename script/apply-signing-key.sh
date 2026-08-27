@@ -40,9 +40,7 @@ check_fpr() {
 
 [ -n "$PRIMARY" ] || die "--primary-fpr is required"
 [ -n "$EXPIRY" ]  || die "--primary-expiry is required (YYYY-MM-DD)"
-if git grep -q 'REPLACE_ME_ROTATION_DATE' -- . 2>/dev/null && [ -z "$ROTATED" ]; then
-  die "this repository has a rotation notice - --rotation-date YYYY-MM-DD is required"
-fi
+NEEDS_ROTATION_DATE=0
 [[ "$EXPIRY" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || die "expiry must be YYYY-MM-DD: $EXPIRY"
 check_fpr "--primary-fpr" "$PRIMARY"
 check_fpr "--subkey-archivist-fpr" "$SUB_ARCHIVIST"
@@ -61,10 +59,23 @@ done
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
 
+# This script names every placeholder in its own source, so it must exclude
+# itself from the search - otherwise it reports its own text as unresolved work
+# and refuses to finish. Only bites once the script is committed.
+SELF=':(exclude)script/apply-signing-key.sh'
+
+
 # Spaced form, as fingerprints are conventionally shown to humans.
 spaced() { echo "$1" | sed -E 's/(.{4})/\1 /g; s/ $//'; }
 
-mapfile -t files < <(git grep -l 'REPLACE_ME_' -- . || true)
+if git grep -q 'REPLACE_ME_ROTATION_DATE' -- . "$SELF" 2>/dev/null; then
+  NEEDS_ROTATION_DATE=1
+fi
+if [ "$NEEDS_ROTATION_DATE" = "1" ] && [ -z "$ROTATED" ]; then
+  die "this repository has a dated notice - --rotation-date YYYY-MM-DD is required"
+fi
+
+mapfile -t files < <(git grep -l 'REPLACE_ME_' -- . "$SELF" || true)
 [ "${#files[@]}" -gt 0 ] || die "no placeholders found - has this already been run?"
 
 # Written as `if` blocks rather than `[ -n x ] && cmd`: under `set -e` a false
@@ -98,7 +109,7 @@ if [ -n "$PUBKEY" ]; then
   done
 fi
 
-if git grep -n 'REPLACE_ME_' -- . ; then
+if git grep -n 'REPLACE_ME_' -- . "$SELF" ; then
   die "placeholders above are still unresolved. Run 'git checkout -- .' to undo this\n       partial run, then retry with the missing --subkey-* argument."
 fi
 printf '\nDone. Review with '\''git diff'\'', then commit.\n'
