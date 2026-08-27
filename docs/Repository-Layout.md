@@ -72,6 +72,15 @@ content that has not landed.
 Deletion is the mirror image: nothing is removed until the new `Release` no
 longer references it.
 
+## Architecture-independent packages
+
+A package declaring `Architecture: all` appears in the `Packages` index of every
+architecture the repository offers. `apt` fetches
+`dists/<suite>/<component>/binary-<arch>/Packages` for the architecture it is
+running on and nothing else, so an arch-independent package listed only once
+would be invisible to every client. The pool object is stored once; only the
+index entry is repeated.
+
 ## Suites
 
 `v0.1` publishes a single suite. `suite` is a required configuration field

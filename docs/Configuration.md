@@ -52,6 +52,14 @@ interpret packages: a package's architecture is read from its control stanza,
 and a package whose architecture is not in this list is a hard error rather than
 a silent omission.
 
+**`Architecture: all` is the exception, and it is not optional.** An
+architecture-independent package declares `all`, which is not an architecture
+and never appears in this list. Such a package is listed in the `Packages` index
+of *every* declared architecture, because that is where `apt` looks for it —
+there is no `binary-all` index in the paths a client fetches. Treating `all` as
+"not in `architectures`" would reject every arch-independent package, which is
+why it is called out here rather than left to the reader.
+
 ## Signing
 
 | Field | Required | Notes |

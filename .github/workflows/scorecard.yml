@@ -22,7 +22,7 @@ jobs:
       contents: read
       actions: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -34,6 +34,6 @@ jobs:
           # repository. Becomes true on its own at M4.
           publish_results: ${{ github.event.repository.visibility == 'public' }}
 
-      - uses: github/codeql-action/upload-sarif@v3
+      - uses: github/codeql-action/upload-sarif@6f5948dfacef28e207b48d0905cf90c03365536d # codeql-bundle-v2.26.4
         with:
           sarif_file: results.sarif
