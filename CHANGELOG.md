@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `internal/sign`: sign `Release` with a signing subkey read from
+  `ARCHIVIST_GPG_KEY`, producing `Release.gpg` and `InRelease` plus the public
+  key in armoured and binary form. A key carrying private material for a
+  certify-capable key is refused rather than used, so the rule in
+  [Signing Keys](docs/Signing-Keys.md) is enforced rather than recommended.
 - `internal/repo`: generate the published tree. Pool placement from control
   fields, `.archivist.json` sidecars, per-architecture `Packages` and
   `Packages.gz`, per-architecture `Release` markers, and the signed-manifest
