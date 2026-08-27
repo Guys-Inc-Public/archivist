@@ -48,6 +48,7 @@ jobs:
           set -euo pipefail
           export GNUPGHOME="${RUNNER_TEMP}/gnupg"
           mkdir -p "$GNUPGHOME" && chmod 700 "$GNUPGHOME"
+          printf 'allow-loopback-pinentry\n' > "$GNUPGHOME/gpg-agent.conf"
           printf '%s' "$RELEASE_GPG_PRIVATE_KEY" | gpg --batch --import
           echo "GNUPGHOME=${GNUPGHOME}" >> "$GITHUB_ENV"
           # Fail loudly if the secret holds usable private material for a key that
@@ -68,10 +69,17 @@ jobs:
         uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
         with:
           version: '~> v2'
-          args: ${{ inputs.dry-run && 'release --clean --snapshot --skip=publish,sign' || 'release --clean' }}
+          # A dry run that skips signing does not exercise the step most likely to
+          # break, which is how a passphrase-protected key reached this workflow
+          # unnoticed. Skip publishing only.
+          args: ${{ inputs.dry-run && 'release --clean --snapshot --skip=publish' || 'release --clean' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ vars.RELEASE_GPG_FINGERPRINT }}
+          # Always defined, even when empty: GoReleaser fails template expansion
+          # on an absent .Env key, so an unset secret would break the build
+          # rather than simply signing without a passphrase.
+          GPG_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
 
       - name: Attest build provenance
         if: ${{ !inputs.dry-run }}
