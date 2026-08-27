@@ -1,9 +1,10 @@
 # Configuration
 
 > [!WARNING]
-> **Pre-release.** The schema below is the design target for `v0.1` and is open
-> for comment until it ships. Once `v0.1.0` is tagged, changes here are breaking
-> changes.
+> **Pre-release.** This schema is loaded and enforced today, and is open for
+> comment until `v0.1.0` is tagged. After that, changes here are breaking
+> changes. Fields under `publish` are read but not yet acted on: see the
+> [roadmap](Roadmap.md).
 
 `archivist.yml` describes the repository you are publishing. Field names follow
 Debian's own vocabulary wherever one exists, so that what you write here matches

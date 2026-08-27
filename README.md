@@ -14,9 +14,11 @@
 ---
 
 > [!WARNING]
-> **Pre-release.** The CLI surface below is the design target, not yet a working
-> implementation. Track progress against [the roadmap](./docs/Roadmap.md).
-> Nothing here is stable until `v0.1.0` is tagged.
+> **Pre-release.** `archivist build` works today: it turns a directory of
+> packages into a signed repository you can install from. `publish` and `verify`
+> are still the design target and exit `2`. Track progress against
+> [the roadmap](./docs/Roadmap.md). Nothing here is stable until `v0.1.0` is
+> tagged.
 
 ## Why
 
@@ -46,15 +48,31 @@ once `v0.1.0` ships.
 ## Example
 
 ```console
+$ export ARCHIVIST_GPG_KEY="$(cat signing-subkey.asc)"
 $ archivist build ./dist --config archivist.yml --out ./repo
-  reading 3 packages from ./dist
-    github-desktop  3.4.9  amd64
-    github-desktop  3.4.9  arm64
-    github-desktop  3.4.9  armhf
-  writing dists/stable/main/binary-{amd64,arm64,armhf}/Packages
-  signing dists/stable/Release  ->  Release.gpg, InRelease
-  ok  ./repo
+Read 3 packages from ./dist
+Wrote ./repo (3 added)
 
+  Repository  GitHub Desktop for Linux
+  Suite       stable (main)
+  Packages    3 across amd64, arm64, armhf
+  Signed by   A0C660357E9DCB30B809AD9D85C52067D78D485D
+
+Try it before publishing:
+
+  echo "deb [signed-by=/home/you/repo/public.asc] file:///home/you/repo stable main" \
+    | sudo tee /etc/apt/sources.list.d/archivist-local.list
+  sudo apt-get update
+```
+
+A local repository is a real repository, so that last step is not a simulation:
+`apt` verifies the signature and installs the package exactly as it will once
+the tree is in a bucket.
+
+`publish` and `verify` are next, and are shown here as the design target rather
+than as working commands — both exit `2` today:
+
+```console
 $ archivist publish ./repo --bucket my-apt-repo --endpoint https://s3.example.com
   uploaded 3 packages, 11 metadata files
   ok  https://apt.example.com/

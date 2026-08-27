@@ -92,8 +92,12 @@ jobs:
   round-trip:
     name: Round trip (apt installs from a built repository)
     runs-on: ubuntu-latest
-    # bookworm, so the check runs against GnuPG 2.2.40 and the apt that most
-    # users actually have, rather than whatever ubuntu-latest ships this month.
+    # Debian stable, so the check runs against the gpg and apt a user actually
+    # has rather than whatever ubuntu-latest ships this month. That is currently
+    # trixie: GnuPG 2.4.7 and apt 3.0. Note that this tag moves - decision 0009's
+    # armour finding was made against bookworm's GnuPG 2.2.40, which this no
+    # longer exercises.
+    #
     # Everything the job needs is generated inside it, secrets included, so it
     # runs unchanged on a pull request from a fork.
     container: debian:stable-slim

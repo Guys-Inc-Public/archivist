@@ -3,8 +3,13 @@
 What `archivist` publishes, and why each file is there. Everything below follows
 the Debian archive format; none of it is invented.
 
+Paths below are relative to the repository root — the bucket root, or the key
+prefix within it if you publish into one. A repository is entirely
+self-contained under that root, which is what lets several of them share one
+bucket.
+
 ```
-/
+<root>/
 ├── dists/
 │   └── stable/                          <- codename
 │       ├── Release                      signed manifest of everything below
@@ -20,11 +25,16 @@ the Debian archive format; none of it is invented.
 ├── pool/
 │   └── main/
 │       └── g/github-desktop/
-│           └── github-desktop_3.4.9_amd64.deb
+│           ├── github-desktop_3.4.9_amd64.deb
+│           └── github-desktop_3.4.9_amd64.deb.archivist.json
 ├── public.asc                           armoured public key
-├── public.gpg                           dearmoured, for /etc/apt/keyrings
-└── index.html                           install instructions
+└── public.gpg                           dearmoured, for /etc/apt/keyrings
 ```
+
+That is the whole tree. There is no landing page: `apt` never fetches `/`, and a
+generated one would be a website to maintain and a file to clobber in a shared
+bucket. See [decision 0014](decisions/0014-no-generated-landing-page.md) — where
+a bare URL should lead is a hosting question, answered with a redirect.
 
 ## The trust chain
 
@@ -61,6 +71,15 @@ Pool paths derive from control fields only. A package that arrives named
 `github-desktop_3.4.9_amd64.deb`, because the first name encodes one project's
 release convention and the second is what the archive format specifies. See
 [decision 0006](decisions/0006-identity-from-control-stanzas.md).
+
+## The sidecars
+
+Each pool object has a `.archivist.json` file beside it holding that package's
+control stanza and checksums. They are how an index is regenerated without
+downloading the pool, and they are not part of the Debian archive format:
+standard tools copy them and clients ignore them, so a mirror of an `archivist`
+repository is still a valid apt repository. See
+[decision 0012](decisions/0012-metadata-sidecar-format.md).
 
 ## Publish ordering
 
