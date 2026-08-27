@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `internal/repo`: generate the published tree. Pool placement from control
+  fields, `.archivist.json` sidecars, per-architecture `Packages` and
+  `Packages.gz`, per-architecture `Release` markers, and the signed-manifest
+  `Release` with its MD5Sum, SHA1 and SHA256 blocks. Output is byte-for-byte
+  deterministic, so a regenerated repository can be diffed against the one it
+  replaces.
+- A package belongs to exactly one component, and a second configured component
+  gets a valid but empty index. `ScanSidecars` also rejects a pool object that
+  is not where its own control stanza puts it, which catches a renamed file or
+  a sidecar sitting beside the wrong object.
+- Building into a directory that already holds a repository merges rather than
+  replaces: existing packages are kept, rebuilding the same input is a no-op,
+  and republishing a version with different content is refused unless it is
+  explicitly allowed.
 - `internal/config`: load and validate `archivist.yml`. Unknown and duplicate
   keys are rejected, every problem in a file is reported at once rather than
   one per run, and which fields are required depends on the command — `build`
