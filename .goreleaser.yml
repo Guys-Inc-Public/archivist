@@ -41,8 +41,15 @@ signs:
     id: gpg
     signature: '${artifact}.asc'
     cmd: gpg
+    # The signing subkey is passphrase-protected and CI has no TTY, so gpg has
+    # nowhere to prompt: it fails with "Inappropriate ioctl for device". Feed the
+    # passphrase on stdin under loopback pinentry. Empty is fine for an
+    # unprotected key - gpg does not ask for one it does not need.
+    stdin: '{{ .Env.GPG_PASSPHRASE }}'
     args:
       - --batch
+      - --pinentry-mode=loopback
+      - --passphrase-fd=0
       - --local-user={{ .Env.GPG_FINGERPRINT }}
       - --output=${signature}
       - --detach-sign
