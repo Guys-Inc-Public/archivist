@@ -43,7 +43,7 @@ $ archivist publish ./repo --bucket my-apt-repo --endpoint https://s3.example.co
   ok  https://apt.example.com/
 
 $ archivist verify https://apt.example.com --keyring ./public.asc
-  InRelease signature      ok  (246FE9B7…ADE2ACFE, expires 2028-08-25)
+  InRelease signature      ok  (1234567890AB…12345678, expires 2028-01-01)
   Packages checksums       ok  (3/3)
   pool objects reachable   ok  (3/3)
   ok  repository is internally consistent

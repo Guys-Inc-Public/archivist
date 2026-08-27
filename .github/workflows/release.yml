@@ -50,10 +50,17 @@ jobs:
           mkdir -p "$GNUPGHOME" && chmod 700 "$GNUPGHOME"
           printf '%s' "$RELEASE_GPG_PRIVATE_KEY" | gpg --batch --import
           echo "GNUPGHOME=${GNUPGHOME}" >> "$GITHUB_ENV"
-          # Fail loudly if the secret holds a primary key. Only a signing subkey
-          # belongs in CI - see docs/Signing-Keys.md.
-          if gpg --batch --list-secret-keys --with-colons | awk -F: '$1=="sec" && $12 ~ /c/ {found=1} END{exit !found}'; then
-            echo "::error::The imported secret key can certify. CI must hold a signing subkey only."
+          # Fail loudly if the secret holds usable private material for a key that
+          # can certify. Only a signing subkey belongs in CI - see docs/Signing-Keys.md.
+          #
+          # Capability alone is not the test. `gpg --export-secret-subkeys` leaves a
+          # gnu-dummy stub of the primary in the export, so a correct CI key and a
+          # full secret key BOTH report caps=cSC in field 12. Field 15 is what
+          # separates them: "#" means no secret material present, "+" means there is.
+          # Checking only field 12 rejects every correctly-prepared key.
+          if gpg --batch --list-secret-keys --with-colons \
+            | awk -F: '$1=="sec" && $12 ~ /c/ && $15 != "#" {found=1} END{exit !found}'; then
+            echo "::error::The imported secret key carries private material for a certify-capable key. CI must hold a signing subkey only."
             exit 1
           fi
 

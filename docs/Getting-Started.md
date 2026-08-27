@@ -41,7 +41,7 @@ architectures: [amd64, arm64, armhf]
 description: Packages for Example Project
 
 signing:
-  key_id: 246FE9B7D018E7A8C90694AF173719DDADE2ACFE
+  key_id: 1234567890ABCDEF1234567890ABCDEF12345678
 
 publish:
   bucket: example-apt

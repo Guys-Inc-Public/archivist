@@ -23,7 +23,7 @@ architectures: [amd64, arm64, armhf]
 
 # --- Signing -----------------------------------------------------------------
 signing:
-  key_id: 246FE9B7D018E7A8C90694AF173719DDADE2ACFE
+  key_id: 1234567890ABCDEF1234567890ABCDEF12345678
   # The key itself comes from $ARCHIVIST_GPG_KEY. There is no field for it.
 
 # --- Publishing --------------------------------------------------------------
