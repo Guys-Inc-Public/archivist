@@ -73,10 +73,10 @@ fingerprint and nothing else; which subkey signed a given artifact is an
 implementation detail they never need to care about.
 
 ```
-primary     REPLACE_ME_PRIMARY_FPR  rsa4096 [C]  expires REPLACE_ME_PRIMARY_EXPIRY
+primary     F45BB6D34D82EF56BB97FBE0F305FB33592B46C8  rsa4096 [C]  expires 2029-08-26
  |
- +- sign    REPLACE_ME_SUBKEY_ARCHIVIST_FPR  rsa4096 [S]  archivist releases
- +- sign    REPLACE_ME_SUBKEY_APT_FPR  rsa4096 [S]  github-desktop apt repository
+ +- sign    63029D0DD76E40614D44631FB7CAA8B2B498960D  rsa4096 [S]  archivist releases
+ +- sign    65B6F5564EAF3BC46D38867B10239ACC5F23DEEE  rsa4096 [S]  github-desktop apt repository
 ```
 
 Two subkeys rather than one, because a single subkey shared between two CI
