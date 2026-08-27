@@ -92,10 +92,10 @@ func build(args []string) error {
 // control stanza, never its name - applies just as much to deciding whether a
 // file is a package at all.
 func readPackages(root string) (packages []*deb.Package, scanned int, err error) {
-	// #nosec G703,G122 -- the root is the directory the user named on the
-	// command line, and this runs with the user's own privileges over their own
-	// build output. There is no boundary here for a symlink to cross: anything
-	// the walk can reach, the invoking shell could already read.
+	// #nosec G703 -- the root is the directory the user named on the command
+	// line, and this runs with the user's own privileges over their own build
+	// output. There is no boundary here for a symlink to cross: anything the
+	// walk can reach, the invoking shell could already read.
 	err = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -105,7 +105,12 @@ func readPackages(root string) (packages []*deb.Package, scanned int, err error)
 		}
 		scanned++
 
-		// #nosec G304 -- walking the directory the caller named.
+		// #nosec G304,G122 -- the path comes from walking the directory the
+		// caller named, with the caller's own privileges. Both rules are listed
+		// here rather than left to the annotation above: gosec attaches G122 to
+		// this line, and an inner directive that omits it can leave it
+		// unsuppressed - which surfaced as a lint failure that reproduced in CI
+		// and not locally, on identical code, toolchain and linter version.
 		f, openErr := os.Open(path)
 		if openErr != nil {
 			return openErr
