@@ -68,10 +68,48 @@ once.
 
 ## The Guys Inc keys
 
+One primary certifies **two** signing subkeys. Users verify the primary
+fingerprint and nothing else; which subkey signed a given artifact is an
+implementation detail they never need to care about.
+
 ```
-primary  9129 8955 2DCD 86E6 9150  D032 753B 218B 25FE 5F74   rsa4096 [C]  expires 2029-08-25
-subkey   246F E9B7 D018 E7A8 C906  94AF 1737 19DD ADE2 ACFE   rsa4096 [S]  expires 2028-08-25
+primary  REPLACE_ME_PRIMARY_FPR              rsa4096 [C]  expires REPLACE_ME_PRIMARY_EXPIRY
+ |
+ +- subkey  REPLACE_ME_SUBKEY_ARCHIVIST_FPR  rsa4096 [S]  archivist releases
+ +- subkey  REPLACE_ME_SUBKEY_APT_FPR        rsa4096 [S]  apt.guysinc.pub
 ```
+
+Two subkeys rather than one, because a single subkey shared between two CI
+systems means a compromise of either repository can sign for both. Splitting
+them costs users nothing — the fingerprint they check is the primary's either
+way — and it means each repository's Actions secret can only sign that
+repository's artifacts.
+
+## Custody
+
+Where each piece lives, and why there. The rule underneath is that the thing
+which is hard to replace should be hard to reach.
+
+| Artifact | Lives at | Reached |
+|---|---|---|
+| Primary `[C]` | YubiKey 5 | A few times a year, to certify a subkey |
+| Primary backup, encrypted | 1Password, plus an offline copy elsewhere | Only if the YubiKey is lost |
+| Revocation certificate | 1Password, plus the same offline copy | Only on compromise |
+| Signing subkeys | Each repository's Actions secret | Every release |
+| Subkey exports | 1Password | Re-provisioning, since Actions secrets cannot be read back |
+| Public key | This repository and the published repository | Constantly, by everyone |
+
+The YubiKey is deliberately **not** in the signing path — no hosted runner can
+reach a USB device. It holds the primary, whose only job is certification. What
+signs releases is a software key in a CI secret, and that is the arrangement
+working as intended: a leaked subkey costs a rotation nobody notices, a leaked
+primary costs every user a manual reinstall.
+
+Generate on an air-gapped live system — the value is that the OS is RAM-only and
+leaves nothing behind, not that the hardware is special. Write the revocation
+certificate and the encrypted backup **before** moving the primary to the
+YubiKey: `keytocard` moves the key and leaves a stub, so a missing backup means
+the only copy is on hardware that can be lost.
 
 ## Rotation
 
@@ -82,9 +120,12 @@ thing that broke.
 
 Schedule the work at **T-minus 90 days**:
 
-1. Generate a replacement subkey under the same primary.
-2. Export it and update the CI secret.
-3. Update `signing.key_id` in `archivist.yml`.
+1. Generate a replacement subkey under the same primary — plug in the YubiKey;
+   no air-gapped session is needed, because the primary is on the card.
+2. Export it and update that repository's CI secret. Rotating one subkey does
+   not touch the other repository.
+3. Update `signing.key_id` in `archivist.yml`, and the
+   `RELEASE_GPG_FINGERPRINT` Actions **variable**, which GoReleaser reads.
 4. Publish a repository with the new subkey. The public key block that ships in
    the repository contains both subkeys, so clients that have not refreshed
    still validate.
