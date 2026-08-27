@@ -21,6 +21,10 @@ codename: stable
 components: [main]
 architectures: [amd64, arm64, armhf]
 
+# How long a Release stays valid. Unset by default; see the note below before
+# turning it on.
+# valid_for: 7d
+
 # --- Signing -----------------------------------------------------------------
 signing:
   key_id: 1234567890ABCDEF1234567890ABCDEF12345678
@@ -35,6 +39,25 @@ publish:
   prefix: ""
 ```
 
+## What each command requires
+
+"Required" depends on the command, because the commands need different things.
+
+| | Requires |
+|---|---|
+| `archivist build` | Repository identity and `signing.key_id`. Nothing under `publish`. |
+| `archivist publish` | Everything `build` requires, plus `publish.bucket` and `publish.public_url`. |
+
+`build` writes a repository tree to local disk and never contacts object
+storage, so it does not ask you to invent a bucket name to exercise a path that
+has no bucket in it. Fields you *do* supply are still checked for format
+whichever command you run: a malformed `public_url` is a mistake the day it is
+written, not the day it is first uploaded.
+
+Validation reports every problem it finds at once. A file with four mistakes
+produces four messages, each naming the field, rather than four consecutive
+runs.
+
 ## Repository identity
 
 | Field | Required | Notes |
@@ -46,6 +69,7 @@ publish:
 | `codename` | yes | `Codename:` — the specific name. Equal to `suite` for most projects. |
 | `components` | yes | `Components:`. Almost always `[main]`. |
 | `architectures` | yes | `Architectures:`. Advertised in `Release` so the set stays stable across releases where a build failed. |
+| `valid_for` | no | How long after its `Date` a `Release` remains valid, written as `Valid-Until:`. **Unset by default.** |
 
 `architectures` declares what the repository *offers*. It is not used to
 interpret packages: a package's architecture is read from its control stanza,
@@ -60,11 +84,31 @@ there is no `binary-all` index in the paths a client fetches. Treating `all` as
 "not in `architectures`" would reject every arch-independent package, which is
 why it is called out here rather than left to the reader.
 
+### `valid_for`
+
+Written as one or more `<count><unit>` terms, where the units are `w`, `d`,
+`h`, `m` and `s` — `7d`, `1w`, `1w12h`. Days are supported because a week is
+how maintainers think about repository freshness, and `168h` is an invitation
+to get the arithmetic wrong.
+
+Leaving it unset is the default and is the right choice for most projects.
+`Valid-Until` defends against a freeze attack, but it also means a repository
+that stops publishing **breaks on a timer** — `apt update` fails outright for
+every user, and it cannot be fixed through the channel it broke. Turn it on if
+you publish on a predictable cadence. See
+[decision 0011](decisions/0011-valid-until-is-opt-in.md).
+
 ## Signing
 
 | Field | Required | Notes |
 |---|---|---|
 | `signing.key_id` | yes | Fingerprint of the **signing subkey**. Not the primary. See [Signing Keys](Signing-Keys.md#two-fingerprints-and-why-they-differ). |
+
+`key_id` is the full 40-character fingerprint. Spaces and an `0x` prefix are
+accepted, so you can paste what `gpg --fingerprint` printed without reformatting
+it. A short 8- or 16-character key ID is rejected rather than padded: short IDs
+can be forged by collision, and a repository signed by a key you did not mean to
+trust is the failure this tool exists to prevent.
 
 The private key is read from `ARCHIVIST_GPG_KEY` and has no configuration field
 by design. A key in a config file gets committed; a key passed as a flag lands
@@ -78,7 +122,7 @@ in shell history and in the process table.
 | `publish.endpoint` | no | S3-compatible endpoint. Omit for Amazon S3. |
 | `publish.region` | no | Defaults to `auto`, which suits R2 and MinIO. |
 | `publish.public_url` | yes | The URL users will reach the repository at. Used for the generated install snippet — it can differ from the endpoint, and for a CDN-fronted bucket it always does. |
-| `publish.prefix` | no | Key prefix, for serving a repository from a subdirectory. |
+| `publish.prefix` | no | Key prefix, for serving a repository from a subdirectory of a shared bucket. Leading and trailing slashes are optional; `foo`, `/foo` and `foo/` all mean the same thing. |
 
 Credentials come from the standard AWS environment variables and are never read
 from this file.

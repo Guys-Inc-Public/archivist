@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `internal/config`: load and validate `archivist.yml`. Unknown and duplicate
+  keys are rejected, every problem in a file is reported at once rather than
+  one per run, and which fields are required depends on the command — `build`
+  writes to local disk and does not ask for object-storage settings.
+- `valid_for` is documented and parsed, closing the gap decision 0011 left: it
+  accepts week and day units, and stays unset by default.
 - Read package metadata directly from `.deb` files: `ar` framing, and control
   archives compressed with gzip, xz or zstd.
 - `archivist inspect` accepts a `.deb` as well as a bare control file, and
