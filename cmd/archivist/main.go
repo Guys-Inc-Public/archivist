@@ -2,9 +2,11 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"runtime/debug"
 	"strings"
@@ -33,7 +35,7 @@ Commands:
   build      Generate a signed repository tree from a directory of packages
   publish    Upload a repository tree to S3-compatible object storage
   verify     Check that a published repository is internally consistent
-  inspect    Print the parsed control stanza of a Debian control file
+  inspect    Print the parsed control stanza of a .deb or control file
   version    Print version information
 
 Run "archivist <command> -h" for the flags a command accepts.
@@ -85,15 +87,17 @@ func printVersion() error {
 	return err
 }
 
-// inspect parses a Debian control file and prints its fields. It exists so the
+// inspect prints the parsed control stanza of a package. It exists so the
 // control-stanza parser - the component everything else depends on - can be
 // exercised directly against a real package's metadata.
 func inspect(args []string) error {
 	fs := flag.NewFlagSet("inspect", flag.ContinueOnError)
 	component := fs.String("component", "main", "archive component, for the computed pool path")
 	fs.Usage = func() {
-		_, _ = fmt.Fprint(fs.Output(), "Usage: archivist inspect [flags] <control-file>\n\n"+
-			"Reads a Debian control file, or standard input when the path is \"-\".\n\n")
+		_, _ = fmt.Fprint(fs.Output(), "Usage: archivist inspect [flags] <file>\n\n"+
+			"Reads a .deb package or a bare Debian control file, or standard input\n"+
+			"when the path is \"-\". Which one it is is determined by content, never\n"+
+			"by the file's name.\n\n")
 		fs.PrintDefaults()
 	}
 	if err := fs.Parse(args); err != nil {
@@ -101,13 +105,14 @@ func inspect(args []string) error {
 	}
 	if fs.NArg() != 1 {
 		fs.Usage()
-		return errors.New("expected exactly one control file")
+		return errors.New("expected exactly one file")
 	}
 
-	in := os.Stdin
-	if path := fs.Arg(0); path != "-" {
+	name := fs.Arg(0)
+	var in io.Reader = os.Stdin
+	if name != "-" {
 		// #nosec G304 -- reading a caller-supplied path is this command's entire job.
-		f, err := os.Open(path)
+		f, err := os.Open(name)
 		if err != nil {
 			return err
 		}
@@ -115,7 +120,7 @@ func inspect(args []string) error {
 		in = f
 	}
 
-	control, err := deb.ParseControl(in)
+	control, pkg, err := readForInspection(name, in)
 	if err != nil {
 		return err
 	}
@@ -133,5 +138,35 @@ func inspect(args []string) error {
 		fmt.Printf("%-*s  %s\n", width, f, value)
 	}
 	fmt.Printf("\n%-*s  %s\n", width, "(pool path)", control.PoolPath(*component))
+	if pkg != nil {
+		fmt.Printf("%-*s  %d\n", width, "(size)", pkg.Size)
+		fmt.Printf("%-*s  %s\n", width, "(sha256)", pkg.SHA256)
+	}
 	return nil
 }
+
+// readForInspection decides whether the input is a .deb or a bare control file
+// by looking at what it starts with. Decision 0006 forbids trusting a package's
+// name for its identity; choosing a parser by extension would be the same
+// mistake in a smaller place, and would break "-" besides.
+func readForInspection(name string, r io.Reader) (*deb.Control, *deb.Package, error) {
+	buf := bufio.NewReader(r)
+
+	magic, err := buf.Peek(len(debMagic))
+	if err != nil && !errors.Is(err, io.EOF) {
+		return nil, nil, err
+	}
+	if string(magic) != debMagic {
+		control, err := deb.ParseControl(buf)
+		return control, nil, err
+	}
+
+	pkg, err := deb.Read(name, buf)
+	if err != nil {
+		return nil, nil, err
+	}
+	return pkg.Control, pkg, nil
+}
+
+// debMagic is the ar archive header every .deb file begins with.
+const debMagic = "!<arch>\n"

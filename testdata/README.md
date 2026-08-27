@@ -8,7 +8,14 @@ deliberately not committed: a repository whose fixtures are hundred-megabyte
 binaries is unpleasant to clone, and a fixture that large rarely tests anything
 a small synthetic package does not.
 
-> [!NOTE]
-> Fixture generation lands with M1, when there is a package reader to feed. The
-> current tests exercise control-stanza parsing against inline fixtures in
-> `internal/deb/control_test.go`.
+The generator is [`internal/debtest`](../internal/debtest), which builds a
+complete `.deb` — `ar` framing, `control.tar` and `data.tar` — in memory. It
+covers all four control-archive encodings, so every test run exercises `xz` and
+`zstd` regardless of what is installed on the machine running it.
+
+Because a builder and a reader written together can be wrong in the same way,
+correctness is established against `dpkg-deb` rather than against the fixtures:
+see [decision 0013](../docs/decisions/0013-deb-decompression-support.md).
+
+This directory holds no committed fixtures today. It stays because the
+round-trip test that proves M1 writes a generated package set into it.

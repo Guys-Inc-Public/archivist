@@ -24,3 +24,8 @@ rather than edited, so the history of the design stays legible.
 | [0006](0006-identity-from-control-stanzas.md) | Package identity comes from control stanzas, never filenames | Accepted |
 | [0007](0007-docs-in-repo-mirrored-to-wiki.md) | `docs/` is the source of truth; the wiki is generated | Accepted |
 | [0008](0008-tool-owns-install-snippet.md) | `archivist` generates the install snippet | Accepted |
+| [0009](0009-openpgp-library-not-gpg.md) | Sign with a Go OpenPGP library, not by invoking `gpg` | Accepted |
+| [0010](0010-object-storage-sdk.md) | Use `aws-sdk-go-v2` for object storage | Accepted |
+| [0011](0011-valid-until-is-opt-in.md) | `Valid-Until` is opt-in and unset by default | Accepted |
+| [0012](0012-metadata-sidecar-format.md) | The metadata sidecar format | Accepted |
+| [0013](0013-deb-decompression-support.md) | Decompress control archives in-process: gzip, xz and zstd | Accepted |
