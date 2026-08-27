@@ -26,6 +26,23 @@ metadata layout, and multi-architecture cross-compilation. The hosted options
 solve this as SaaS. `archivist` solves it as a single static binary you run in
 your own CI, publishing to storage you own.
 
+### Where it came from
+
+This is not a design sketched in the abstract. It is the publishing half of
+[GitHub Desktop for Linux](https://github.com/Guys-Inc-Public/github-desktop-linux),
+which serves signed `.deb` packages for three architectures from
+[apt.guysinc.pub](https://apt.guysinc.pub) and has already been through the things
+that go wrong: a passphrase-protected key that cannot sign in CI, a state pull that
+swallowed its own failure and quietly unlisted every previous version, a signing key
+rotation, and an armour checksum that GnuPG rejects but the Go library omits.
+
+What carried over is the design, not the code — a survey of the original pipeline
+found no file worth extracting unchanged, so `archivist` is a clean-room rewrite
+([ADR&nbsp;0001](./docs/decisions/0001-regenerate-from-scratch.md), and
+[Extraction Inventory](./docs/Extraction-Inventory.md) for what was surveyed). The
+original repository still publishes with `reprepro` directly; it moves to `archivist`
+once `v0.1.0` ships.
+
 ## Example
 
 ```console
