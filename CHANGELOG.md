@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Release` with its MD5Sum, SHA1 and SHA256 blocks. Output is byte-for-byte
   deterministic, so a regenerated repository can be diffed against the one it
   replaces.
+- A package belongs to exactly one component, and a second configured component
+  gets a valid but empty index. `ScanSidecars` also rejects a pool object that
+  is not where its own control stanza puts it, which catches a renamed file or
+  a sidecar sitting beside the wrong object.
 - Building into a directory that already holds a repository merges rather than
   replaces: existing packages are kept, rebuilding the same input is a no-op,
   and republishing a version with different content is refused unless it is

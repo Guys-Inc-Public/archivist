@@ -105,7 +105,7 @@ func Generate(packages []*deb.Package, opts Options) (*Result, error) {
 	seen := map[string]string{}
 
 	for _, p := range packages {
-		entry := NewEntry(p)
+		entry := NewEntry(p, component)
 		key, err := entry.Key()
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", p.Path, err)
@@ -121,11 +121,15 @@ func Generate(packages []*deb.Package, opts Options) (*Result, error) {
 		switch prior, published := byKey[key]; {
 		case !published:
 			result.Added++
-		case prior.SHA256 == p.SHA256:
+		case prior.SHA256 == p.SHA256 && prior.Component() == component:
 			// Rebuilding the same input must be a no-op, or nobody can run
 			// build twice without thinking about it.
 			result.Unchanged++
 		case !opts.Replace:
+			if prior.Component() != component {
+				return nil, fmt.Errorf("%s is %w in component %q, not %q",
+					key, ErrAlreadyPublished, prior.Component(), component)
+			}
 			return nil, fmt.Errorf("%s is %w (published %s, incoming %s)",
 				key, ErrAlreadyPublished, short(prior.SHA256), short(p.SHA256))
 		default:
@@ -149,7 +153,7 @@ func Generate(packages []*deb.Package, opts Options) (*Result, error) {
 	result.Total = len(all)
 
 	for _, p := range toPlace {
-		if err := place(opts.Out, component, p.source, p.entry); err != nil {
+		if err := place(opts.Out, p.source, p.entry); err != nil {
 			return nil, err
 		}
 	}
@@ -161,8 +165,8 @@ func Generate(packages []*deb.Package, opts Options) (*Result, error) {
 }
 
 // place copies a package into the pool and writes its sidecar.
-func place(root, component, source string, e *Entry) error {
-	rel, err := e.PoolPath(component)
+func place(root, source string, e *Entry) error {
+	rel, err := e.PoolPath()
 	if err != nil {
 		return err
 	}

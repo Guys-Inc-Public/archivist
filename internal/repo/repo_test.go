@@ -105,6 +105,32 @@ func TestGenerateWritesTheDocumentedLayout(t *testing.T) {
 	}
 }
 
+// v0.1 has no way to route one package to main and another to contrib, so a
+// second component gets a valid index that stays empty. That is a documented
+// limitation rather than an accident, and an empty index is not the same thing
+// as a missing one: a missing Packages file is a 404 on every apt update.
+func TestASecondComponentGetsAnEmptyButValidIndex(t *testing.T) {
+	in, out := t.TempDir(), t.TempDir()
+	cfg := testConfig(t, strings.ReplaceAll(configBody, "components: [main]", "components: [main, contrib]"))
+	generate(t, out, []*deb.Package{pkg(t, in, "widget", "1.0", "amd64")}, cfg)
+
+	if body := read(t, out, "dists/stable/contrib/binary-amd64/Packages"); body != "" {
+		t.Errorf("contrib is not empty:\n%s", body)
+	}
+	if !strings.Contains(read(t, out, "dists/stable/main/binary-amd64/Packages"), "Package: widget") {
+		t.Error("the package did not go into the first component")
+	}
+
+	release := read(t, out, "dists/stable/Release")
+	if !strings.Contains(release, "Components: main contrib") {
+		t.Errorf("Release does not advertise both components:\n%s", release)
+	}
+	// Release must still bind the empty index, or apt has an unlisted file.
+	if !strings.Contains(release, "contrib/binary-amd64/Packages") {
+		t.Errorf("Release does not list the empty component's index:\n%s", release)
+	}
+}
+
 func TestPackagesEntryDescribesThePoolObject(t *testing.T) {
 	in, out := t.TempDir(), t.TempDir()
 	p := pkg(t, in, "widget", "1.0", "amd64")
@@ -387,6 +413,31 @@ func TestScanSidecarsRoundTrips(t *testing.T) {
 	}
 	if _, err := repo.ScanSidecars(out); err == nil {
 		t.Error("ScanSidecars accepted a sidecar with no object")
+	}
+}
+
+// A pool object's path is computed from its control stanza, so an object that
+// is not where its own stanza puts it has been renamed or the sidecar was
+// copied next to the wrong file. Carrying either into an index publishes a
+// Filename that resolves to nothing.
+func TestScanSidecarsRejectsAMisplacedObject(t *testing.T) {
+	in, out := t.TempDir(), t.TempDir()
+	generate(t, out, []*deb.Package{pkg(t, in, "widget", "1.0", "amd64")}, testConfig(t, configBody))
+
+	dir := filepath.Join(out, "pool", "main", "w", "widget")
+	for _, name := range []string{"widget_1.0_amd64.deb", "widget_1.0_amd64.deb" + repo.SidecarSuffix} {
+		renamed := strings.Replace(name, "widget_1.0_amd64.deb", "WidgetInstaller-1.0.deb", 1)
+		if err := os.Rename(filepath.Join(dir, name), filepath.Join(dir, renamed)); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	_, err := repo.ScanSidecars(out)
+	if err == nil {
+		t.Fatal("ScanSidecars accepted an object that is not where its stanza puts it")
+	}
+	if !strings.Contains(err.Error(), "widget_1.0_amd64.deb") {
+		t.Errorf("error does not say where it should have been:\n%v", err)
 	}
 }
 

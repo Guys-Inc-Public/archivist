@@ -31,12 +31,12 @@ var archiveFields = map[string]bool{
 }
 
 // stanza renders one entry as it appears in a Packages index.
-func stanza(e *Entry, component string) (string, error) {
+func stanza(e *Entry) (string, error) {
 	c, err := e.control()
 	if err != nil {
 		return "", err
 	}
-	poolPath, err := e.PoolPath(component)
+	poolPath, err := e.PoolPath()
 	if err != nil {
 		return "", err
 	}
@@ -81,7 +81,7 @@ func stanza(e *Entry, component string) (string, error) {
 // never see a package listed once. The pool object is stored once; only the
 // index entry repeats.
 func packagesIndex(entries []*Entry, component, arch string) ([]byte, error) {
-	selected, err := selectForArch(entries, arch)
+	selected, err := selectFor(entries, component, arch)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func packagesIndex(entries []*Entry, component, arch string) ([]byte, error) {
 		if i > 0 {
 			b.WriteByte('\n')
 		}
-		s, err := stanza(e, component)
+		s, err := stanza(e)
 		if err != nil {
 			return nil, err
 		}
@@ -100,9 +100,16 @@ func packagesIndex(entries []*Entry, component, arch string) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func selectForArch(entries []*Entry, arch string) ([]*Entry, error) {
+// selectFor picks the entries belonging in one component's index for one
+// architecture. A package lives in exactly one component - the pool holds one
+// copy of it, under that component - so listing it anywhere else would publish
+// a Filename that resolves to nothing.
+func selectFor(entries []*Entry, component, arch string) ([]*Entry, error) {
 	var out []*Entry
 	for _, e := range entries {
+		if e.Component() != component {
+			continue
+		}
 		c, err := e.control()
 		if err != nil {
 			return nil, err

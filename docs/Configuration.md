@@ -67,7 +67,7 @@ runs.
 | `description` | no | `Description:` in `Release`. |
 | `suite` | yes | `Suite:` — the rolling name users write in `sources.list` (`stable`). |
 | `codename` | yes | `Codename:` — the specific name. Equal to `suite` for most projects. |
-| `components` | yes | `Components:`. Almost always `[main]`. |
+| `components` | yes | `Components:`. Almost always `[main]`. Incoming packages go into the **first** one; see below. |
 | `architectures` | yes | `Architectures:`. Advertised in `Release` so the set stays stable across releases where a build failed. |
 | `valid_for` | no | How long after its `Date` a `Release` remains valid, written as `Valid-Until:`. **Unset by default.** |
 
@@ -83,6 +83,20 @@ of *every* declared architecture, because that is where `apt` looks for it —
 there is no `binary-all` index in the paths a client fetches. Treating `all` as
 "not in `architectures`" would reject every arch-independent package, which is
 why it is called out here rather than left to the reader.
+
+### Components
+
+Every component listed here gets a `Packages` index for every architecture, and
+all of them are advertised in `Release`.
+
+**Packages are placed in the first component in the list.** `v0.1` has no way to
+route one package to `main` and another to `contrib`, so a second component gets
+a valid index that stays empty. Listing more than one is therefore only useful
+for advertising a component you intend to fill later — which is a real reason,
+since removing a component from `Release` later is a breaking change for anyone
+who named it in their `sources.list`.
+
+If you only publish `main`, which is almost everyone, none of this comes up.
 
 ### `valid_for`
 

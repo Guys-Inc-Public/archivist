@@ -39,10 +39,15 @@ type Entry struct {
 	// package originally, so that a hand-edited sidecar is subject to the same
 	// rules a real .deb is.
 	parsed *deb.Control
+
+	// component is where in the pool this entry lives. It is not stored in the
+	// sidecar because the sidecar's own path already says it - pool/<component>/
+	// - and a fact recorded twice is a fact that can disagree with itself.
+	component string
 }
 
-// NewEntry records a package that has just been read.
-func NewEntry(p *deb.Package) *Entry {
+// NewEntry records a package that has just been read into a component.
+func NewEntry(p *deb.Package, component string) *Entry {
 	fields := map[string]string{}
 	for _, name := range p.Control.Fields() {
 		fields[name] = p.Control.Get(name)
@@ -54,9 +59,14 @@ func NewEntry(p *deb.Package) *Entry {
 		MD5:     p.MD5,
 		SHA1:    p.SHA1,
 		SHA256:  p.SHA256,
-		parsed:  p.Control,
+
+		parsed:    p.Control,
+		component: component,
 	}
 }
+
+// Component returns the archive component the entry lives in.
+func (e *Entry) Component() string { return e.component }
 
 // control returns the entry's stanza, parsing it on first use.
 func (e *Entry) control() (*deb.Control, error) {
@@ -117,12 +127,12 @@ func (e *Entry) Key() (string, error) {
 }
 
 // PoolPath returns the entry's path relative to the repository root.
-func (e *Entry) PoolPath(component string) (string, error) {
+func (e *Entry) PoolPath() (string, error) {
 	c, err := e.control()
 	if err != nil {
 		return "", err
 	}
-	return c.PoolPath(component), nil
+	return c.PoolPath(e.component), nil
 }
 
 // writeSidecar writes the JSON metadata file next to a pool object.
@@ -188,6 +198,31 @@ func ScanSidecars(root string) ([]*Entry, error) {
 		if err != nil {
 			return err
 		}
+
+		rel, err := filepath.Rel(root, object)
+		if err != nil {
+			return err
+		}
+		rel = filepath.ToSlash(rel)
+		parts := strings.Split(rel, "/")
+		if len(parts) < 2 {
+			return fmt.Errorf("%s is not inside a component directory", rel)
+		}
+		e.component = parts[1]
+
+		// The path a package should occupy is computed from its control
+		// stanza, so a pool object that is not where its own stanza puts it is
+		// a defect - a renamed file, or a sidecar copied next to the wrong
+		// object. Carrying it into an index would publish a Filename that
+		// 404s.
+		want, err := e.PoolPath()
+		if err != nil {
+			return err
+		}
+		if want != rel {
+			return fmt.Errorf("%s is at %s but its control stanza puts it at %s", path, rel, want)
+		}
+
 		entries = append(entries, e)
 		return nil
 	})
