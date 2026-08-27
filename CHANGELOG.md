@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `archivist build` works: it reads every package under a directory, writes a
+  signed repository tree, and prints the one command needed to install from it
+  over `file://`. Packages are recognised by content, so a release directory
+  holding checksums and archives alongside them needs no cleaning up first.
+- A round-trip check in CI builds packages with `dpkg-deb`, generates a key with
+  `gpg`, and installs from the resulting repository with a real `apt` on Debian
+  stable - then confirms that a tampered index and a tampered signature are both
+  refused. It generates everything it needs, so it runs on pull requests from
+  forks. `make round-trip` runs the same script.
 - `internal/sign`: sign `Release` with a signing subkey read from
   `ARCHIVIST_GPG_KEY`, producing `Release.gpg` and `InRelease` plus the public
   key in armoured and binary form. A key carrying private material for a
