@@ -14,7 +14,7 @@
 # rather than a silently half-applied rotation.
 set -euo pipefail
 
-PRIMARY="" EXPIRY="" SUB_ARCHIVIST="" SUB_APT="" PUBKEY=""
+PRIMARY="" EXPIRY="" SUB_ARCHIVIST="" SUB_APT="" PUBKEY="" ROTATED=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -23,12 +23,13 @@ while [ $# -gt 0 ]; do
     --subkey-archivist-fpr) SUB_ARCHIVIST="${2:?}"; shift 2 ;;
     --subkey-apt-fpr)       SUB_APT="${2:?}";       shift 2 ;;
     --public-key)           PUBKEY="${2:?}";        shift 2 ;;
+    --rotation-date)        ROTATED="${2:?}";       shift 2 ;;
     -h|--help)              sed -n '2,13p' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
 
-die() { printf 'error: %s\n' "$*" >&2; exit 1; }
+die() { printf 'error: %b\n' "$*" >&2; exit 1; }
 
 # A mistyped fingerprint is not something to discover after publishing.
 check_fpr() {
@@ -39,6 +40,9 @@ check_fpr() {
 
 [ -n "$PRIMARY" ] || die "--primary-fpr is required"
 [ -n "$EXPIRY" ]  || die "--primary-expiry is required (YYYY-MM-DD)"
+if git grep -q 'REPLACE_ME_ROTATION_DATE' -- . 2>/dev/null && [ -z "$ROTATED" ]; then
+  die "this repository has a rotation notice - --rotation-date YYYY-MM-DD is required"
+fi
 [[ "$EXPIRY" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || die "expiry must be YYYY-MM-DD: $EXPIRY"
 check_fpr "--primary-fpr" "$PRIMARY"
 check_fpr "--subkey-archivist-fpr" "$SUB_ARCHIVIST"
@@ -75,6 +79,9 @@ for f in "${files[@]}"; do
   if [ -n "$SUB_APT" ]; then
     sed -i -e "s/REPLACE_ME_SUBKEY_APT_FPR_SPACED/$(spaced "$SUB_APT")/g" \
            -e "s/REPLACE_ME_SUBKEY_APT_FPR/${SUB_APT}/g" "$f"
+  fi
+  if [ -n "$ROTATED" ]; then
+    sed -i -e "s/REPLACE_ME_ROTATION_DATE/${ROTATED}/g" "$f"
   fi
   echo "updated $f"
 done
