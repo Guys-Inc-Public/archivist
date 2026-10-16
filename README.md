@@ -1,17 +1,12 @@
-<div align="center">
+<img src="https://brand.guysinc.pub/banner/readme-header.svg" alt="Guys Inc" width="100%">
 
 # archivist
 
-**Point it at a directory of `.deb` files and get a signed apt repository.**
-**Publish that repository to any S3-compatible bucket, on your own domain.**
+Turn a directory of .deb files into a signed, verifiable apt repository on your own domain: one static binary, S3-compatible storage, no SaaS.
 
-[![CI](https://github.com/Guys-Inc-Public/archivist/actions/workflows/ci.yml/badge.svg)](https://github.com/Guys-Inc-Public/archivist/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/Guys-Inc-Public/archivist/actions/workflows/codeql.yml/badge.svg)](https://github.com/Guys-Inc-Public/archivist/actions/workflows/codeql.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-2f80c4.svg)](./LICENSE)
-
-</div>
-
----
+![Licence](https://img.shields.io/badge/licence-MIT-ff67bd?style=flat-square&labelColor=0e090f)
+![Build](https://github.com/guysinc-public/archivist/actions/workflows/ci.yml/badge.svg)
+![Docs](https://img.shields.io/badge/docs-reviewed_2026--10--15-22dcb3?style=flat-square&labelColor=0e090f)
 
 > [!WARNING]
 > **Pre-release.** `archivist build` works today: it turns a directory of
@@ -31,7 +26,7 @@ your own CI, publishing to storage you own.
 ### Where it came from
 
 This is not a design sketched in the abstract. It is the publishing half of
-[GitHub Desktop for Linux](https://github.com/Guys-Inc-Public/github-desktop-linux),
+[GitHub Desktop for Linux](https://github.com/guysinc-forks/github-desktop-linux),
 which serves signed `.deb` packages for three architectures from
 [apt.guysinc.pub](https://apt.guysinc.pub) and has already been through the things
 that go wrong: a passphrase-protected key that cannot sign in CI, a state pull that
@@ -87,7 +82,7 @@ $ archivist verify https://apt.example.com --keyring ./public.asc
 Add it to a workflow:
 
 ```yaml
-- uses: Guys-Inc-Public/archivist@v1
+- uses: guysinc-public/archivist@v1
   with:
     packages: ./dist
     config: archivist.yml
@@ -99,7 +94,7 @@ Add it to a workflow:
 ## Documentation
 
 Docs live in [`docs/`](./docs) and are mirrored to the
-[wiki](https://github.com/Guys-Inc-Public/archivist/wiki) on every merge to `main`.
+[wiki](https://github.com/guysinc-public/archivist/wiki) on every merge to `main`.
 
 | | |
 |---|---|
@@ -123,13 +118,13 @@ Kubernetes. See [Roadmap](./docs/Roadmap.md#scope-discipline).
 ## Contributing
 
 Start with [CONTRIBUTING.md](./CONTRIBUTING.md) for the development setup, and the
-[organisation contribution guide](https://github.com/Guys-Inc-Public/.github/blob/main/CONTRIBUTING.md)
+[organisation contribution guide](https://github.com/guysinc-public/.github/blob/main/CONTRIBUTING.md)
 for the policy that applies across all Guys Inc repositories.
 
 Questions and ideas belong in
-[Discussions](https://github.com/Guys-Inc-Public/archivist/discussions);
+[Discussions](https://github.com/guysinc-public/archivist/discussions);
 reproducible defects belong in
-[Issues](https://github.com/Guys-Inc-Public/archivist/issues).
+[Issues](https://github.com/guysinc-public/archivist/issues).
 
 ## Security
 
