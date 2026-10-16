@@ -3,8 +3,11 @@ name: CI
 on:
   push:
     branches: [main]
+  # No base-branch filter: a pull request opened on another pull request's branch (a stack layer,
+  # ADR 0021 in Branding-Standards) is checked like one on main.
   pull_request:
-    branches: [main]
+    # ready_for_review too: check is skipped on a draft, so the conversion must start the run that reports on the head.
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 permissions:
@@ -159,3 +162,26 @@ jobs:
         with:
           args: --no-progress --exclude-path .github/wiki './**/*.md'
           fail: true
+
+  # The one check every repository exposes (ADRs 0020, 0021): the organisation ruleset requires a check
+  # named "check". Needs every job above that runs on a pull request, and fails unless every one succeeded
+  # (the template in Branding-Standards, templates/github/workflows/check.yml).
+  check:
+    # Skipped on a draft on purpose: GitHub never merges a draft whatever its checks say, so a draft costs no minutes (ADRs 0023, 0034).
+    if: ${{ always() && github.event_name == 'pull_request' && !github.event.pull_request.draft }}
+    needs: [build, lint, cross-compile, round-trip, docs]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Every needed job succeeded
+        env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+        run: |
+          echo "$RESULTS"
+          # Plain shell, so the step runs on any runner. At least one job, and every one of them "success":
+          # a skipped or cancelled job did not check the pull request, and no other value is known.
+          results=$(printf '%s' "$RESULTS" | tr -d '[]"' | tr -d '[:space:]' | tr ',' ' ')
+          test -n "$results" || { echo "::error::check needs no job"; exit 1; }
+          for result in $results; do
+            test "$result" = success || { echo "::error::a needed job ended $result"; exit 1; }
+          done
