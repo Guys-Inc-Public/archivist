@@ -117,9 +117,8 @@ Kubernetes. See [Roadmap](./docs/Roadmap.md#scope-discipline).
 
 ## Contributing
 
-Start with [CONTRIBUTING.md](./CONTRIBUTING.md) for the development setup, and the
-[organisation contribution guide](https://github.com/guysinc-public/.github/blob/main/CONTRIBUTING.md)
-for the policy that applies across all Guys Inc repositories.
+Start with [CONTRIBUTING.md](./CONTRIBUTING.md) for the development setup and the
+policy that applies across all Guys Inc repositories.
 
 Questions and ideas belong in
 [Discussions](https://github.com/guysinc-public/archivist/discussions);
